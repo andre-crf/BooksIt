@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BooksIt</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/logo-livros.ico') }}">
+</head>
+
+<body>
+    <!-- Partículas de fundo (10 partículas via CSS para melhor performance) -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <!-- Header com logo -->
+        <header class="header">
+            <div class="logo-wrapper">
+                <a href="/" class="logo-link">
+                    <img src="{{ url_for('static', filename='img/logo-livros.png') }}" 
+                         alt="Logo" class="logo-img">
+                </a>
+                <div class="header-text">
+                    <h1>BooksIt</h1>
+                    <p class="subtitle">Descubra seu próximo grande livro</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Formulário de busca -->
+        <div class="search-section">
+            <form method="POST" autocomplete="off" id="searchForm">
+                <div class="search-wrapper">
+                    <div class="autocomplete">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" 
+                               name="termo" 
+                               id="searchInput"
+                               placeholder="Busque por título, autor ou ISBN..." 
+                               required>
+                        <div id="loading" class="loading hidden">
+                            <div class="spinner"></div>
+                        </div>
+                        <div id="suggestions"></div>
+                    </div>
+                    <button type="submit" class="search-btn" title="Buscar" aria-label="Buscar">
+                        <i data-lucide="search"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Chips de categorias populares -->
+            <div class="quick-search">
+                <span class="quick-label">Populares:</span>
+                <div class="chips">
+                    <span class="chip" data-termo="ficção científica">
+                        <i data-lucide="rocket" aria-hidden="true"></i>
+                        Ficção Científica
+                    </span>
+                    <span class="chip" data-termo="romance">
+                        <i data-lucide="heart" aria-hidden="true"></i>
+                        Romance
+                    </span>
+                    <span class="chip" data-termo="desenvolvimento pessoal">
+                        <i data-lucide="lightbulb" aria-hidden="true"></i>
+                        Autoajuda
+                    </span>
+                    <span class="chip" data-termo="fantasia">
+                        <i data-lucide="sparkles" aria-hidden="true"></i>
+                        Fantasia
+                    </span>
+                    <span class="chip" data-termo="tecnologia">
+                        <i data-lucide="laptop" aria-hidden="true"></i>
+                        Tecnologia
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensagem de erro -->
+        {% if erro %}
+        <div class="error-message">
+            <i data-lucide="alert-circle"></i>
+            <span>{{ erro }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Resultados -->
+        {% if livros %}
+        <div class="results-header">
+            <h2>
+                <i data-lucide="book-open"></i>
+                {{ livros|length }} {{ 'livro encontrado' if livros|length == 1 else 'livros encontrados' }}
+            </h2>
+        </div>
+
+        <div class="results-grid">
+            {% for livro in livros %}
+            <article class="book-card">
+                <!-- Capa -->
+                <a href="{{ livro.link }}" target="_blank" class="book-cover">
+                    {% if livro.capa %}
+                        <img src="{{ livro.capa }}" alt="Capa de {{ livro.titulo }}" loading="lazy" decoding="async">
+                    {% else %}
+                        <div class="cover-placeholder">
+                            <i data-lucide="book"></i>
+                            <span>{{ livro.titulo[:30] }}</span>
+                        </div>
+                    {% endif %}
+                    <div class="cover-overlay">
+                        <i data-lucide="external-link"></i>
+                        <span>Ver detalhes</span>
+                    </div>
+                </a>
+
+                <!-- Conteúdo -->
+                <div class="book-content">
+                    <h3 class="book-title">{{ livro.titulo }}</h3>
+                    
+                    <div class="book-meta">
+                        <span class="author">
+                            <i data-lucide="user"></i>
+                            {{ livro.autores }}
+                        </span>
+                        <span class="year">
+                            <i data-lucide="calendar"></i>
+                            {{ livro.ano }}
+                        </span>
+                    </div>
+
+                    <!-- Badges de categorias -->
+                    {% if livro.categorias != '—' %}
+                    <div class="categories">
+                        {% for categoria in livro.categorias.split(', ')[:3] %}
+                        <span class="category-badge">{{ categoria }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Informações adicionais -->
+                    <div class="book-info">
+                        <div class="info-item">
+                            <i data-lucide="building"></i>
+                            <div>
+                                <span class="label">Editora</span>
+                                <span class="value">{{ livro.editora }}</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <i data-lucide="file-text"></i>
+                            <div>
+                                <span class="label">Páginas</span>
+                                <span class="value">{{ livro.paginas }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ISBNs -->
+                    <div class="isbn-section">
+                        {% if livro.isbn_10 != '—' %}
+                        <div class="isbn-item">
+                            <span class="isbn-label">ISBN-10:</span>
+                            <code>{{ livro.isbn_10 }}</code>
+                        </div>
+                        {% endif %}
+                        {% if livro.isbn_13 != '—' %}
+                        <div class="isbn-item">
+                            <span class="isbn-label">ISBN-13:</span>
+                            <code>{{ livro.isbn_13 }}</code>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Descrição -->
+                    <div class="description-wrapper">
+                        <p class="description description-collapsed" data-book-id="{{ loop.index }}">
+                            {{ livro.descricao }}
+                        </p>
+                        <button class="toggle-description" data-target="{{ loop.index }}">
+                            <span class="toggle-text">Ver mais</span>
+                            <i data-lucide="chevron-down" class="toggle-icon"></i>
+                        </button>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                <i data-lucide="book-heart"></i>
+                Feito com carinho para leitores
+            </p>
+            <p class="footer-note">Dados fornecidos pela Google Books API</p>
+        </footer>
+    </div>
+
+    <!-- Lucide: no final do body para os ícones renderizarem -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        // Inicializar ícones (Lucide substitui <i data-lucide="..."> por SVG)
+        function initIcons() {
+            var lib = window.lucide || window.Lucide;
+            if (lib && lib.createIcons) {
+                lib.createIcons();
+                return;
+            }
+            setTimeout(initIcons, 30);
+        }
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initIcons);
+        } else {
+            initIcons();
+        }
+
+        const input = document.getElementById("searchInput");
+        const suggestionsBox = document.getElementById("suggestions");
+        const loading = document.getElementById("loading");
+        let timeout = null;
+        let abortController = null;
+
+        // Autocomplete com debounce maior e abort da requisição anterior
+        input.addEventListener("input", () => {
+            const query = input.value.trim();
+
+            clearTimeout(timeout);
+            if (abortController) abortController.abort();
+            suggestionsBox.innerHTML = "";
+            loading.classList.add("hidden");
+
+            if (query.length < 3) return;
+
+            timeout = setTimeout(() => {
+                loading.classList.remove("hidden");
+                abortController = new AbortController();
+
+                fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5`, {
+                    signal: abortController.signal
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        suggestionsBox.innerHTML = "";
+                        loading.classList.add("hidden");
+                        if (!data.items) return;
+
+                        data.items.forEach(item => {
+                            const info = item.volumeInfo;
+                            const title = (info.title || "Título desconhecido").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                            const authors = info.authors ? info.authors.join(", ") : "Autor desconhecido";
+                            const thumb = info.imageLinks?.thumbnail || null;
+
+                            const div = document.createElement("div");
+                            div.className = "suggestion-item";
+                            div.innerHTML = thumb
+                                ? `<img src="${thumb}" alt="" loading="lazy"><div class="suggestion-text"><span class="suggestion-title">${title}</span><span class="suggestion-author">${authors}</span></div>`
+                                : `<div class="mini-cover"><i data-lucide="book"></i></div><div class="suggestion-text"><span class="suggestion-title">${title}</span><span class="suggestion-author">${authors}</span></div>`;
+
+                            div.onclick = () => {
+                                input.value = info.title || "";
+                                suggestionsBox.innerHTML = "";
+                                document.getElementById("searchForm").submit();
+                            };
+                            suggestionsBox.appendChild(div);
+                        });
+                        if (typeof lucide !== "undefined") lucide.createIcons();
+                    })
+                    .catch((err) => {
+                        if (err.name !== "AbortError") console.error("Erro no autocomplete:", err);
+                        loading.classList.add("hidden");
+                        suggestionsBox.innerHTML = "";
+                    });
+            }, 500);
+        });
+
+        // Fechar sugestões ao clicar fora
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest(".autocomplete")) {
+                suggestionsBox.innerHTML = "";
+            }
+        });
+
+        // Chips de busca rápida
+        document.querySelectorAll(".chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                const termo = chip.getAttribute("data-termo");
+                input.value = termo;
+                document.getElementById("searchForm").submit();
+            });
+        });
+
+        // Toggle de descrição (sem re-renderizar ícones a cada clique)
+        document.querySelectorAll(".toggle-description").forEach(button => {
+            button.addEventListener("click", () => {
+                const targetId = button.getAttribute("data-target");
+                const description = document.querySelector(`.description[data-book-id="${targetId}"]`);
+                const icon = button.querySelector(".toggle-icon");
+                const text = button.querySelector(".toggle-text");
+                if (!description || !icon || !text) return;
+
+                if (description.classList.contains("description-collapsed")) {
+                    description.classList.remove("description-collapsed");
+                    description.classList.add("description-expanded");
+                    text.textContent = "Ver menos";
+                    icon.setAttribute("data-lucide", "chevron-up");
+                } else {
+                    description.classList.add("description-collapsed");
+                    description.classList.remove("description-expanded");
+                    text.textContent = "Ver mais";
+                    icon.setAttribute("data-lucide", "chevron-down");
+                }
+                if (typeof lucide !== "undefined") lucide.createIcons();
+            });
+        });
+
+        // Ícones Lucide uma vez após o DOM estar pronto
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => { if (typeof lucide !== "undefined") lucide.createIcons(); });
+        } else {
+            if (typeof lucide !== "undefined") lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
