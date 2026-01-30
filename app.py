@@ -5,9 +5,8 @@ import time
 
 app = Flask(__name__)
 
-# Cache simples em memória (termo -> (timestamp, livros)), expira em 5 min
 _cache = {}
-_CACHE_TTL = 300  # segundos
+_CACHE_TTL = 300  
 
 
 def _cache_key(termo):
@@ -19,7 +18,7 @@ def buscar_livros(termo):
     termo_limpo = termo.replace("-", "").replace(" ", "")
     termo_upper = termo_limpo.upper()
 
-    # verifica se é ISBN
+    
     if (
         (len(termo_upper) == 13 and termo_upper.isdigit()) or
         (len(termo_upper) == 10 and termo_upper[:-1].isdigit() and termo_upper[-1] in "0123456789X")
@@ -123,7 +122,7 @@ import time
 
 app = Flask(__name__)
 
-# Cache simples em memória (termo -> (timestamp, livros)), expira em 5 min
+
 _cache = {}
 _CACHE_TTL = 300  # segundos
 
