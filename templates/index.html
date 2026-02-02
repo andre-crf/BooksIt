@@ -193,6 +193,20 @@
                             <i data-lucide="chevron-down" class="toggle-icon"></i>
                         </button>
                     </div>
+
+                    <!-- Botões de ação -->
+                    <div class="action-buttons">
+                        <a href="{{ livro.link }}" target="_blank" rel="noopener noreferrer" class="action-button google-books-button">
+                            <i data-lucide="book-open"></i>
+                            <span>Ver no Google Books</span>
+                        </a>
+                        {% if livro.amazon_link != '#' %}
+                        <a href="{{ livro.amazon_link }}" target="_blank" rel="noopener noreferrer" class="action-button amazon-button">
+                            <i data-lucide="shopping-cart"></i>
+                            <span>Comprar na Amazon</span>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </article>
             {% endfor %}
@@ -233,7 +247,6 @@
         let timeout = null;
         let abortController = null;
 
-        // Autocomplete com debounce maior e abort da requisição anterior
         input.addEventListener("input", () => {
             const query = input.value.trim();
 
@@ -302,7 +315,6 @@
             });
         });
 
-        // Toggle de descrição (sem re-renderizar ícones a cada clique)
         document.querySelectorAll(".toggle-description").forEach(button => {
             button.addEventListener("click", () => {
                 const targetId = button.getAttribute("data-target");
@@ -326,7 +338,6 @@
             });
         });
 
-        // Ícones Lucide uma vez após o DOM estar pronto
         if (document.readyState === "loading") {
             document.addEventListener("DOMContentLoaded", () => { if (typeof lucide !== "undefined") lucide.createIcons(); });
         } else {
